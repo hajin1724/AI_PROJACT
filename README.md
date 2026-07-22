@@ -12,14 +12,14 @@ Streamlit으로 화면을 구성하고 FastAPI로 분류 모델과 LLM 호출을
 - 데이터 처리: pandas, numpy
 - 자연어 처리: scikit-learn (TfidfVectorizer), konlpy (Okt 형태소 분석기)
 - 모델: LogisticRegression (baseline)
-- 백엔드: FastAPI (예정)
-- 프론트엔드: Streamlit (예정)
-- LLM 연동: LLM API (예정)
+- 백엔드: FastAPI 
+- 프론트엔드: Streamlit 
+- LLM 연동: LLM API 
 - 개발 환경: VS Code, Python venv, Jupyter Notebook
 - 버전 관리: Git, GitHub
 
 **데이터**
-- AI-Hub「감정이 태깅된 자유대화(성인)」— 성인/청소년 라벨링데이터 (텍스트 + 감정 태깅)
+- AI-Hub「감정이 태깅된 자유대화(성인)」— 성인/청소년 라벨링데이터 (텍스트 + 감정 태깅) (사용X)
 - KOTE (Korean Online That-gul Emotions Dataset) — HuggingFace 공개 데이터셋, 44종 세분화 감정 라벨
 - 최종 감정 라벨: 기쁨 / 슬픔 / 화남 / 두려움·놀라움 (4종, 언더샘플링으로 클래스 균형 조정)
 
@@ -35,4 +35,7 @@ Streamlit으로 화면을 구성하고 FastAPI로 분류 모델과 LLM 호출을
 - GitHub 저장소 세팅 및 초기 커밋 완료
 - 목표 : 데이터 준비 100%, 첫 baseline 모델 학습 성공 ✅ (성능 튜닝은 계속 진행 중)
 
-#### Day 02 (7.21 화) : ?
+#### Day 02 (7.21 화) : 결석
+- 유나이티 서울2026 체험으로인한 결석
+
+#### Day 03 (7.22 수) : API 설계와 스트리밋 구현 및 테스트
