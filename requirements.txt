@@ -6,3 +6,6 @@ konlpy
 scikit-learn
 pandas
 numpy
+torch
+transformers
+safetensors

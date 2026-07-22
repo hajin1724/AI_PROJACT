@@ -3,14 +3,17 @@ import random
 import requests
 import streamlit as st
 
+from jobs import JOB_BONUSES
+
 API_URL = "http://127.0.0.1:8000/story"
-JOBS = ["전사", "마법사", "수도자", "음유시인"]
-JOB_STAT_LABEL = {
-    "전사": "💪 힘",
-    "마법사": "🧠 지능",
-    "수도자": "❤️ 체력",
-    "음유시인": "✨ 외모",
+JOBS = list(JOB_BONUSES.keys())
+STAT_LABELS = {
+    "strength": "💪 힘",
+    "intelligence": "🧠 지능",
+    "vitality": "🏃 체력",
+    "appearance": "✨ 외모",
 }
+
 
 st.set_page_config(page_title="AI 던전마스터", page_icon="🎲")
 st.title("🎲 AI 던전마스터")
@@ -181,7 +184,14 @@ if player_input:
 # ---------- 사이드바 ----------
 with st.sidebar:
     st.header(f"캐릭터 ({st.session_state.job})")
-    st.caption(f"직업 보너스: {JOB_STAT_LABEL[st.session_state.job]} 판정 +2")
+    job_bonuses = JOB_BONUSES[st.session_state.job]
+
+    bonus_text = " / ".join(
+        f"{STAT_LABELS[stat]} {bonus:+d}"
+        for stat, bonus in job_bonuses.items()
+    )
+
+    st.caption(f"직업 보너스: {bonus_text}")
 
     st.metric("❤️ 체력(HP)", f"{st.session_state.current_hp} / 20")
     st.metric("💪 힘", st.session_state.stats["strength"])
