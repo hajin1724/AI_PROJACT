@@ -1,0 +1,10 @@
+.env
+venv/
+__pycache__/
+*.pyc
+.git
+data/
+01.원천데이터/
+안쓰는 모델/
+model_test.py
+test.py

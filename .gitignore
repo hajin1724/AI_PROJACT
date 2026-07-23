@@ -3,9 +3,6 @@ __pycache__/
 *.pkl
 .env
 data/
-emotion_bert_model/
-*.safetensors
-*.bin
 emotion_model.pkl
 vectorizer.pkl
 test.py

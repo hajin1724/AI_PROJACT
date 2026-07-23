@@ -1,0 +1,2 @@
+emotion_bert_model/*.safetensors filter=lfs diff=lfs merge=lfs -text
+emotion_bert_model/*.bin filter=lfs diff=lfs merge=lfs -text
