@@ -8,3 +8,4 @@ emotion_bert_model/
 *.bin
 emotion_model.pkl
 vectorizer.pkl
+test.py

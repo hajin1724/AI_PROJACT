@@ -30,18 +30,18 @@ client = OpenAI(base_url=BASE_URL, api_key=API_KEY)
 
 GAME_WORLD_SETTING = """
 이 게임의 배경은 약 20층으로 이루어진 거대한 던전이다.
-던전 최하층에는 소유자의 소원을 이루어 준다고 전해지는 전설의 보물이 잠들어 있다.
+던전 최하층에는 소유자의 소원을 이루어 준다고 전해지는 성배이 잠들어 있다.
 
-플레이어는 그 보물을 찾기 위해 던전에 들어온 모험가이며,
+플레이어는 그 성배를 찾기 위해 던전에 들어온 모험가이며,
 현재 위치에서 한 층씩 깊은 곳으로 내려가며 최하층을 목표로 한다.
 
 던전 깊은 곳에는 마왕이 잠들어 있다.
-마왕은 최하층의 보물과 관련되어 있으며, 플레이어는 충분한 준비 없이 너무 이른 시점에 마왕을 만나거나 쓰러뜨리면 안 된다.
+마왕은 최하층의 성배와 관련되어 있으며, 플레이어는 충분한 준비 없이 너무 이른 시점에 마왕을 만나거나 쓰러뜨리면 안 된다.
 
-플레이어는 전사, 기사, 광전사, 검투사, 도적, 궁수, 사냥꾼,
-마법사, 소환사, 연금술사, 학자, 점성술사,
-수도자, 성기사, 성직자, 탐험가,
-음유시인, 상인, 외교관, 무희 중 하나의 직업을 선택해 모험한다.
+플레이어는 전사, 기사, 광전사, 검투사, 도적, 궁수, 거너,
+마법사, 정령술사, 연금술사, 학자, 마녀,
+무도가, 성기사, 성직자, 악마사냥꾼,
+음유시인, 상인, 용사, 무희 중 하나의 직업을 선택해 모험한다.
 직업의 특성과 현재 스탯, 행동 판정 결과를 스토리에 자연스럽게 반영한다.
 직업과 스탯, 현재 체력, 플레이어의 행동, 행동 판정 성공 여부를 스토리에 자연스럽게 반영한다.
 
@@ -125,6 +125,17 @@ def predict_emotion(text: str, threshold: float = EMOTION_THRESHOLD):
 # ---------- 스탯 / 직업 설정 ----------
 STAT_NAMES = ["strength", "intelligence", "vitality", "appearance"]
 
+MONSTERS = [
+    "고블린", "오크", "코볼트", "스켈레톤", "슬라임",
+    "악마", "좀비", "오우거", "트롤", "데스나이트"
+]
+
+BOSS_MONSTERS = {
+    5: "고블린 킹",
+    10: "리치",
+    15: "드래곤",
+    20: "마왕",
+}
 
 # 텍스트에 이 키워드가 있으면 해당 스탯 체크로 판정 (간단한 규칙 기반 매칭)
 STAT_KEYWORDS = {
@@ -152,7 +163,7 @@ def decide_relevant_stat(player_input: str) -> str:
 
     system_prompt = (
         "너는 텍스트 RPG의 행동 판정 심판이다. "
-        "플레이어 행동을 보고 가장 적절한 스탯 하나만 골라라. "
+        "플레이어 행동과 직업을 보고 가장 적절한 스탯 하나만 골라라. "
         "반드시 아래 네 단어 중 하나만 출력해야 한다. "
         "설명, 문장부호, JSON, 마크다운은 절대 출력하지 마라.\n"
         "- strength: 물리 공격, 힘, 무기 사용, 사격, 격투\n"
@@ -203,19 +214,34 @@ def generate_story(
     context: str,
     relevant_stat: str,
     current_hp: int,
+    current_floor: int,
 ) -> dict:
+    boss_note = ""
+    if current_floor in BOSS_MONSTERS:
+        boss_note = (
+            f"\n현재 {current_floor}층이며, 이 층의 보스는 '{BOSS_MONSTERS[current_floor]}'다. "
+            "스토리 전개상 적절한 시점에 이 보스와의 조우를 포함할 수 있다."
+        )
+
     system_prompt = (
         "너는 텍스트 기반 RPG 게임의 던전마스터야. 반드시 아래 JSON 형식으로만 응답하고, "
         "그 외의 텍스트(설명, 마크다운 코드블록 등)는 절대 포함하지 마.\n"
+        f"몬스터가 등장하는 상황이면 반드시 다음 목록 중 하나만 사용해: {', '.join(MONSTERS)}"
+        f"{boss_note}\n"
         "{\n"
         '  "story": "다음 장면을 2~4문장으로 생생하게 묘사 (판정 실패면 불리하게, 성공이면 유리하게 전개)",\n'
         '  "combat": true 또는 false (이번 상황이 몬스터/적과의 직접적인 전투 상황이면 true, 아니면 false),\n'
+        '  "monster": null 또는 "몬스터 목록 중 하나" (전투 상황이거나 몬스터가 등장하면 반드시 명시, 없으면 null),\n'
+        '  "floor_change": true 또는 false (플레이어가 이번 행동으로 다음 층으로 내려가는 상황이면 true, 아니면 false. '
+        "보스를 물리쳤거나 계단/통로를 발견해 내려갈 명확한 서사적 계기가 있을 때만 true로 해),\n"
+        '  "heal": true 또는 false (플레이어가 휴식, 회복 아이템 사용, 치유 마법 등 체력 회복을 시도한 상황이면 true, 그 외엔 false),\n'
         '  "stat_bonus": null 또는 {"stat": "strength|intelligence|vitality|appearance", "amount": 1~2 사이 정수} '
         "(몬스터를 물리치거나 중요한 사건을 성공적으로 해결했을 때만 부여, 그 외엔 null)\n"
         "}"
     )
     user_prompt = (
         f"[게임의 기본 세계관]\n{GAME_WORLD_SETTING.strip()}\n\n"
+        f"[현재 층수]\n{current_floor}층\n\n"
         f"[현재까지의 스토리 요약]\n"
         f"{context or '게임 시작: 플레이어는 전설의 보물을 찾기 위해 던전 입구에 도착했다. 아직 1층에 진입하지 않았다.'}\n\n"
         f"[플레이어 입력]\n{player_input}\n\n"
@@ -225,7 +251,6 @@ def generate_story(
         f"[현재 체력]\n{current_hp}\n\n"
         "위 정보와 세계관을 반영해 이전 사건과 모순되지 않도록 다음 장면을 JSON으로 응답해줘."
     )
-
 
     completion = client.chat.completions.create(
         model=MODEL_NAME,
@@ -243,6 +268,11 @@ def generate_story(
         data = json.loads(raw)
         story = data.get("story", raw)
         combat = bool(data.get("combat", False))
+        monster = data.get("monster")
+        if monster not in MONSTERS and monster not in BOSS_MONSTERS.values():
+            monster = None
+        floor_change = bool(data.get("floor_change", False))
+        heal = bool(data.get("heal", False)) 
         stat_bonus = data.get("stat_bonus")
         if stat_bonus and stat_bonus.get("stat") in STAT_NAMES:
             stat_bonus = {
@@ -252,15 +282,22 @@ def generate_story(
         else:
             stat_bonus = None
     except (json.JSONDecodeError, AttributeError, TypeError):
-        # LLM이 JSON을 안 지켰을 때를 대비한 안전한 폴백
         story = raw
         combat = False
+        monster = None
+        floor_change = False
         stat_bonus = None
 
-    # HP -1은 "전투 상황에서의 판정 실패"일 때만 고정 적용
     hp_change = -1 if (combat and not success) else 0
 
-    return {"story": story, "hp_change": hp_change, "stat_bonus": stat_bonus}
+    return {
+        "story": story,
+        "hp_change": hp_change,
+        "stat_bonus": stat_bonus,
+        "monster": monster,
+        "floor_change": floor_change,
+        "heal": heal,
+    }
 
 
 # ---------- FastAPI ----------
@@ -294,6 +331,7 @@ class StoryRequest(BaseModel):
     appearance: int = 10
     current_hp: int = 10       # 현재 체력 (프론트에서 매턴 넘겨받아 갱신 후 되돌려줌)
     job: str = "전사"           # 전사/마법사/수도자/음유시인
+    current_floor: int = 1 
 
 
 class StoryResponse(BaseModel):
@@ -309,6 +347,8 @@ class StoryResponse(BaseModel):
     game_over: bool
     stat_bonus: dict | None
     stats: dict
+    monster: str | None      # 추가
+    current_floor: int
 
 
 @app.post("/story", response_model=StoryResponse)
@@ -331,23 +371,31 @@ def next_story(req: StoryRequest):
     else:
         stat_value = float(stats[relevant_stat])
 
-
     job_bonus = get_job_bonus(req.job, relevant_stat)
     dice, threshold, success = roll_dice(confidence, stat_value, job_bonus)
 
     result = generate_story(
-        req.player_input, emotion, success, req.story_context, relevant_stat, req.current_hp
+        req.player_input, emotion, success, req.story_context,
+        relevant_stat, req.current_hp, req.current_floor,
     )
 
-    # 체력 반영 (0~20 클램프, 0이면 게임오버)
-    new_hp = max(0, min(STAT_MAX, req.current_hp + result["hp_change"]))
-    game_over = new_hp <= 0
-
-    # 스탯 성장 반영 (최대 20 캡)
-    if result["stat_bonus"] and not game_over:
+    # 스탯 성장 먼저 반영 (vitality가 HP 상한에 영향을 주므로)
+    if result["stat_bonus"]:
         bonus_stat = result["stat_bonus"]["stat"]
         bonus_amount = result["stat_bonus"]["amount"]
         stats[bonus_stat] = min(STAT_MAX, stats[bonus_stat] + bonus_amount)
+
+    max_hp = stats["vitality"]
+    
+    if result.get("heal") and success:
+        new_hp = max_hp   # 회복 성공 시 풀피
+    else:
+        new_hp = max(0, min(max_hp, req.current_hp + result["hp_change"]))
+    game_over = new_hp <= 0
+
+    new_floor = req.current_floor
+    if result["floor_change"] and not game_over and req.current_floor < 20:
+        new_floor = req.current_floor + 1
 
     return StoryResponse(
         emotion=emotion,
@@ -362,6 +410,8 @@ def next_story(req: StoryRequest):
         game_over=game_over,
         stat_bonus=result["stat_bonus"],
         stats=stats,
+        monster=result["monster"],
+        current_floor=new_floor,
     )
 
 

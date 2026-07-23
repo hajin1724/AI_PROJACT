@@ -141,3 +141,14 @@ def get_job_bonus(job: str, relevant_stat: str) -> int:
 
     normalized_job = job.strip()
     return JOB_BONUSES.get(normalized_job, {}).get(relevant_stat, 0)
+
+JOB_IMAGES = {
+    #"전사": "images/warrior.png",
+    #"마법사": "images/mage.png",
+    # 그린 것부터 하나씩 채우기
+}
+
+DEFAULT_IMAGE = "images/default_character.png"
+
+def get_job_image(job):
+    return JOB_IMAGES.get(job, DEFAULT_IMAGE)
