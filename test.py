@@ -13,7 +13,7 @@ model = AutoModelForSequenceClassification.from_pretrained(MODEL_DIR)
 
 model.eval()
 
-text = "슬퍼"
+text = "슬퍼."
 inputs = tokenizer(
     text,
     return_tensors="pt",
@@ -27,6 +27,7 @@ with torch.no_grad():
     probabilities = torch.softmax(outputs.logits, dim=1)[0]
 
 print("logits:", outputs.logits)
+print(text)
 print("감정별 확률:", probabilities.tolist())
 print("예측 클래스 번호:", torch.argmax(probabilities).item())
 

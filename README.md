@@ -51,9 +51,9 @@ Streamlit으로 화면을 구성하고 FastAPI로 분류 모델과 LLM 호출을
 - klue-bert 모델 재학습 (max_length 64→96, num_train_epochs 3→5, warmup_ratio 추가)
 - 정량적 accuracy(46%)는 baseline과 유사한 수준이었으나, 짧고 명확한 감정 표현("슬퍼." 등)에 대한 체감 정확도는 klue-bert가 더 우수함을 확인
 - TF-IDF + LogisticRegression
-![alt text](image.png)
+![alt text](image-2.png)
 - klue-bert-base (파인튜닝)
-![alt text](image-1.png)
+![alt text](image-3.png)
 - UI/UX 개선
   - 게임오버 시 사망 경위가 표시되지 않던 버그 수정 (session_state에 마지막 스토리 저장 후 게임오버 화면에 출력)
   - 캐릭터 생성 화면에 인트로 스토리 추가
